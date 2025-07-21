@@ -2,7 +2,7 @@
 from fastmcp import FastMCP
 from middleware import custom_middleware
 
-mcp = FastMCP("MyServer")
+mcp = FastMCP("MyServer", stateless_http=True)
 
 @mcp.tool
 def hello(name: str) -> str:
