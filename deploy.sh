@@ -16,29 +16,24 @@ read IMAGE_TAG
 echo "Enter the name of the Docker image (e.g., rosen-mcp):"
 read IMAGE_NAME
 
-# Step 3: Log into Azure Container Registry
+# Step 3: Get ACR login server URL
+ACR_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" --output tsv)
+
+# Step 4: Log into Azure Container Registry
 echo "Logging into Azure Container Registry..."
 az acr login --name $ACR_NAME
 
-# Step 4: Build Docker image locally
+# Step 5: Build Docker image locally
 echo "Building the Docker image..."
-docker buildx build --platform linux/amd64 -t $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG .
-
-# Step 5: Tag the image
-echo "Tagging the Docker image..."
-docker tag $IMAGE_NAME:$IMAGE_TAG $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
+docker buildx build --platform linux/amd64 -t $ACR_SERVER/$IMAGE_NAME:$IMAGE_TAG .
 
 # Step 6: Push the image to ACR
 echo "Pushing the image to Azure Container Registry..."
-docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
+docker push $ACR_SERVER/$IMAGE_NAME:$IMAGE_TAG
 
 # Step 7: Deploy the Docker image to Azure Web App
 echo "Deploying Docker container to Azure Web App..."
 az webapp config container set --name $WEB_APP_NAME --resource-group $RESOURCE_GROUP \
-  --docker-custom-image-name $ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG --docker-registry-server-url https://$ACR_NAME.azurecr.io
-
-# Step 8: Assign AcrPull role to the Managed Identity (if necessary)
-echo "Assigning AcrPull role to the Managed Identity..."
-az role assignment create --assignee <managed-identity-client-id> --role AcrPull --scope $(az acr show --name $ACR_NAME --query id --output tsv)
+  --container-image-name $ACR_SERVER/$IMAGE_NAME:$IMAGE_TAG --container-registry-url https://$ACR_SERVER
 
 echo "Deployment Complete!"
