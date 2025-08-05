@@ -201,3 +201,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Deploy configuration (contains sensitive Azure resource names)
+deploy-config.json

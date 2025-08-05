@@ -1,0 +1,7 @@
+{
+  "resource_group": "your-resource-group",
+  "acr_name": "your-acr-name",
+  "web_app_name": "your-web-app-name",
+  "image_tag": "latest",
+  "image_name": "holaspirit-mcp"
+}

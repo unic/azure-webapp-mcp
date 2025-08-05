@@ -4,17 +4,52 @@
 echo "Logging into Azure..."
 az login
 
-# Step 2: Ask for required parameters
-echo "Enter the name of the Azure Resource Group:"
-read RESOURCE_GROUP
-echo "Enter the name of the Azure Container Registry (ACR):"
-read ACR_NAME
-echo "Enter the name of the Web App in Azure:"
-read WEB_APP_NAME
-echo "Enter the tag for the Docker image (e.g., latest):"
-read IMAGE_TAG
-echo "Enter the name of the Docker image (e.g., rosen-mcp):"
-read IMAGE_NAME
+# Step 2: Load config or ask for required parameters
+CONFIG_FILE="deploy-config.json"
+
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Loading configuration from $CONFIG_FILE..."
+    RESOURCE_GROUP=$(jq -r '.resource_group // empty' "$CONFIG_FILE")
+    ACR_NAME=$(jq -r '.acr_name // empty' "$CONFIG_FILE")
+    WEB_APP_NAME=$(jq -r '.web_app_name // empty' "$CONFIG_FILE")
+    IMAGE_TAG=$(jq -r '.image_tag // empty' "$CONFIG_FILE")
+    IMAGE_NAME=$(jq -r '.image_name // empty' "$CONFIG_FILE")
+else
+    echo "No config file found. You can create '$CONFIG_FILE' to avoid entering these values each time."
+fi
+
+# Ask for missing parameters
+if [ -z "$RESOURCE_GROUP" ]; then
+    echo "Enter the name of the Azure Resource Group:"
+    read RESOURCE_GROUP
+fi
+
+if [ -z "$ACR_NAME" ]; then
+    echo "Enter the name of the Azure Container Registry (ACR):"
+    read ACR_NAME
+fi
+
+if [ -z "$WEB_APP_NAME" ]; then
+    echo "Enter the name of the Web App in Azure:"
+    read WEB_APP_NAME
+fi
+
+if [ -z "$IMAGE_TAG" ]; then
+    echo "Enter the tag for the Docker image (e.g., latest):"
+    read IMAGE_TAG
+fi
+
+if [ -z "$IMAGE_NAME" ]; then
+    echo "Enter the name of the Docker image (e.g., holaspirit-mcp):"
+    read IMAGE_NAME
+fi
+
+echo "Using configuration:"
+echo "  Resource Group: $RESOURCE_GROUP"
+echo "  ACR Name: $ACR_NAME"
+echo "  Web App Name: $WEB_APP_NAME"
+echo "  Image Tag: $IMAGE_TAG"
+echo "  Image Name: $IMAGE_NAME"
 
 # Step 3: Get ACR login server URL
 ACR_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" --output tsv)
